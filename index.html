@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CekMikro - Deteksi Mikro Ekspresi</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome (CDN) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Custom Styles -->
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    /* Perbaikan untuk scroll-padding agar tidak mepet navbar */
+    html {
+      scroll-padding-top: 5rem; /* h-20 = 5rem */
+    }
+
+    /* Custom gradient text */
+    .text-gradient {
+      background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Custom button glow */
+    .btn-glow {
+      background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+    .btn-glow:hover {
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.8);
+    }
+
+    /* Navbar scroll effect */
+    .navbar-scrolled {
+      background-color: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    /* AI Orb (Disalin dari login.html) */
+    .ai-orb-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .ai-orb {
+      position: relative; /* Penting untuk penempatan SVG */
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle at 30% 30%, #a855f7, #6366f1); /* Gradient orb */
+      border-radius: 50%;
+      box-shadow: 0 0 30px #6366f1, 0 0 50px #a855f7, inset 0 0 20px rgba(255,255,255,0.2); /* Menambah inset shadow untuk efek gloss */
+      animation: pulse 4s ease-in-out infinite;
+      display: flex; /* Untuk menempatkan SVG di tengah */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .ai-orb svg {
+        width: 70px; /* Ukuran SVG wajah */
+        height: 70px;
+        fill: none; /* Hilangkan fill agar hanya stroke yang terlihat */
+        stroke: white; /* Warna stroke putih */
+        stroke-width: 3; /* Ketebalan stroke */
+        filter: drop-shadow(0 0 5px rgba(255,255,255,0.7)); /* Efek glow pada wajah */
+    }
+    
+    .ai-ring {
+      position: absolute;
+      border: 2px solid rgba(99, 102, 241, 0.4); /* Warna ring disesuaikan untuk background terang */
+      border-radius: 50%;
+    }
+
+    .ring-1 {
+      width: 220px;
+      height: 220px;
+      animation: rotate 20s linear infinite;
+    }
+    .ring-2 {
+      width: 260px;
+      height: 260px;
+      animation: rotate 30s linear infinite reverse;
+    }
+    .ring-3 {
+      width: 300px;
+      height: 300px;
+      animation: rotate 40s linear infinite;
+      opacity: 0.7; /* Ring terluar sedikit lebih tebal */
+    }
+    
+    /* Scanline effect (disesuaikan agar cocok di bg terang) */
+    .scanline {
+      position: absolute;
+      width: 200px;
+      height: 2px;
+      background: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+      animation: scan 4s ease-in-out infinite;
+      opacity: 0.7;
+    }
+
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 30px #6366f1, 0 0 50px #a855f7, inset 0 0 20px rgba(255,255,255,0.2); }
+      50% { transform: scale(1.05); box-shadow: 0 0 40px #6366f1, 0 0 60px #a855f7, inset 0 0 25px rgba(255,255,255,0.3); }
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes scan {
+      0% { top: 20%; opacity: 0.9; }
+      50% { top: 80%; opacity: 0.4; }
+      100% { top: 20%; opacity: 0.9; }
+    }
+    
+    /* Section hover effect */
+    .section-card {
+      transition: all 0.3s ease;
+    }
+    .section-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.07);
+    }
+    
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+<!-- 🌐 Navbar -->
+<nav id="navbar" class="w-full fixed top-0 left-0 z-50 transition-all duration-300">
+  <div class="px-[30px] container mx-auto px-4">
+    <div class="flex justify-between items-center h-20">
+      
+      <!-- Logo -->
+      <a class="text-2xl font-bold text-gradient d-flex items-center" href="#">
+        <i class="fa-solid fa-face-smile mr-2 text-indigo-600"></i>
+        CekMikro
+      </a>
+
+      <!-- Menu (Desktop) -->
+      <div class="hidden md:flex space-x-6 items-center">
+        <a class="text-gray-600 hover:text-indigo-600 font-medium" href="#home">Home</a>
+        <a class="text-gray-600 hover:text-indigo-600 font-medium" href="#fitur-utama">Fitur Utama</a>
+        <a class="text-gray-600 hover:text-indigo-600 font-medium" href="#panduan-pengguna">Panduan</a>
+        <a class="text-gray-600 hover:text-indigo-600 font-medium" href="#kontak">Kontak</a>
+      </div>
+
+      <!-- Login (Desktop) -->
+      <a class="hidden md:flex items-center justify-center px-5 py-2 border border-indigo-600 text-indigo-600 rounded-full font-medium transition-all hover:bg-indigo-600 hover:text-white" href="login.html">
+      </a>
+      
+      <!-- Mobile Menu Button -->
+      <button id="mobile-menu-button" class="md:hidden text-2xl text-gray-700">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+    </div>
+  </div>
+  
+  <!-- Mobile Menu (Hidden by default) -->
+  <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg">
+    <a class="block px-6 py-3 text-gray-600 hover:bg-indigo-50" href="#home">Home</a>
+    <a class="block px-6 py-3 text-gray-600 hover:bg-indigo-50" href="#fitur-utama">Fitur Utama</a>
+    <a class="block px-6 py-3 text-gray-600 hover:bg-indigo-50" href="#panduan-pengguna">Panduan</a>
+    <a class="block px-6 py-3 text-gray-600 hover:bg-indigo-50" href="dashboard-test.html">Test Mikro</a>
+    <a class="block px-6 py-3 text-gray-600 hover:bg-indigo-50" href="#kontak">Kontak</a>
+    <a class="block px-6 py-3 text-indigo-600 font-bold hover:bg-indigo-50" href="login.html">
+    </a>
+  </div>
+</nav>
+
+<!-- 🧠 Hero Section -->
+<section class="px-[30px] pt-32 pb-20" id="home"> 
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      
+      <!-- Teks Hero -->
+      <div class="text-center md:text-left">
+        <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
+          Deteksi Mikro Ekspresi
+          <span class="block text-gradient">Berbasis 3D CNN</span>
+        </h1>
+        <p class="text-lg text-gray-600 mb-8 max-w-lg mx-auto md:mx-0">
+          Aplikasi <b>CekMikro</b> memanfaatkan kecerdasan buatan (AI) untuk mendeteksi ekspresi mikro wajah secara real-time dengan teknologi <b>3D Convolutional Neural Networks</b>.
+        </p>
+        <a href="./test_micro.html" class="btn-glow inline-flex items-center px-8 py-3 rounded-full text-white font-semibold text-lg shadow-lg transition-all duration-300 hover:scale-105">
+          <i class="fa-solid fa-video mr-2"></i>Mulai Sekarang
+        </a>
+      </div>
+
+      <!-- Visual Hero (Diperbarui) -->
+      <div class="flex justify-center items-center">
+        <div class="ai-orb-container">
+          <div class="ai-ring ring-1"></div>
+          <div class="ai-ring ring-2"></div>
+          <div class="ai-ring ring-3"></div>
+          <div class="ai-orb">
+            <!-- SVG Wajah Tersenyum -->
+            <svg viewBox="0 0 100 100">
+              <circle cx="35" cy="40" r="5"/>
+              <circle cx="65" cy="40" r="5"/>
+              <path d="M 40 60 Q 50 75 60 60" />
+            </svg>
+          </div>
+          <div class="scanline"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ⚙️ Fitur Utama -->
+<section class="px-[30px] py-20 bg-indigo-50" id="fitur-utama">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">Fitur Utama</h2>
+      <p class="text-lg text-gray-600">Pahami lebih dalam dengan teknologi canggih kami.</p>
+    </div>
+    
+    <!-- Grid Fitur -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      
+      <!-- Kartu Fitur 1 -->
+      <div class="section-card bg-white p-6 rounded-xl shadow-lg text-center">
+        <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Deteksi Real-time</h3>
+        <p class="text-gray-600">Analisis ekspresi secara langsung saat video diputar.</p>
+      </div>
+      
+      <!-- Kartu Fitur 2 -->
+      <div class="section-card bg-white p-6 rounded-xl shadow-lg text-center">
+        <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+          <i class="fa-solid fa-video"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Analisis Video Frame</h3>
+        <p class="text-gray-600">Memecah video menjadi frame untuk deteksi presisi.</p>
+      </div>
+
+      <!-- Kartu Fitur 3 -->
+      <div class="section-card bg-white p-6 rounded-xl shadow-lg text-center">
+        <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+          <i class="fa-solid fa-fire"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Heatmap Ekspresi</h3>
+        <p class="text-gray-600">Visualisasikan area wajah yang paling aktif berekspresi.</p>
+      </div>
+
+      <!-- Kartu Fitur 4 -->
+      <div class="section-card bg-white p-6 rounded-xl shadow-lg text-center">
+        <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Grafik Klasifikasi</h3>
+        <p class="text-gray-600">Lihat persentase dan klasifikasi emosi yang terdeteksi.</p>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<!-- 📘 Panduan Pengguna (Diperbarui) -->
+<section class="px-[30px] py-20 bg-white" id="panduan-pengguna">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      
+      <!-- Gambar Panduan (Minimalis) -->
+      <div class="flex justify-center items-center bg-indigo-50 rounded-xl shadow-lg w-full max-w-md h-[300px] md:h-[400px] mx-auto">
+        <i class="fa-solid fa-clipboard-list text-9xl text-indigo-300"></i>
+      </div>
+      
+      <!-- Teks Panduan (Diperbarui) -->
+      <div>
+        <h2 class="text-3xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-book mr-2 text-indigo-600"></i>Panduan Pengguna</h2>
+        <p class="text-lg text-gray-600 mb-6">
+          Ikuti langkah-langkah berikut untuk menggunakan aplikasi <b>CekMikro</b> — mulai deteksi, jalankan analisis, dan lihat hasil visualisasi mikro ekspresi Anda.
+        </p>
+        
+        <ol class="space-y-6">
+          <!-- Langkah 1 (Dimodifikasi) -->
+          <li class="flex items-start">
+            <span class="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold mr-4">1</span>
+            <div>
+              <h3 class="font-semibold text-gray-800 mb-1 text-lg">Mulai Deteksi (Live, Gambar/Video)</h3>
+              <p class="text-gray-700">Pilih metode input Anda: gunakan kamera web untuk deteksi real-time, unggah gambar, atau unggah video pendek (.mp4 < 5 detik). Pastikan wajah terlihat jelas dan pencahayaan cukup.</p>
+            </div>
+          </li>
+          
+          <!-- Langkah 2 (Dimodifikasi) -->
+          <li class="flex items-start">
+            <span class="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold mr-4">2</span>
+            <div>
+              <h3 class="font-semibold text-gray-800 mb-1 text-lg">Proses Analisis Mikro Ekspresi</h3>
+              <p class="text-gray-700">Sistem akan langsung melakukan ekstraksi frame (untuk video) dan menganalisis perubahan ekspresi mikro menggunakan model 3D Convolutional Neural Networks (3D CNN).</p>
+            </div>
+          </li>
+          
+          <!-- Langkah 3 -->
+          <li class="flex items-start">
+            <span class="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold mr-4">3</span>
+            <div>
+              <h3 class="font-semibold text-gray-800 mb-1 text-lg">Tampilkan Hasil Deteksi</h3>
+              <p class="text-gray-700">Sistem akan menampilkan hasil berupa heatmap ekspresi mikro dan grafik klasifikasi emosi secara interaktif. Anda dapat melihat emosi yang terdeteksi beserta nilai kepercayaannya.</p>
+            </div>
+          </li>
+
+          <!-- Langkah 4 (Dimodifikasi dari langkah 5) -->
+          <li class="flex items-start">
+            <span class="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold mr-4">4</span>
+            <div>
+              <h3 class="font-semibold text-gray-800 mb-1 text-lg">Simpan atau Unduh Hasil</h3>
+              <p class="text-gray-700">Setelah analisis selesai, hasil deteksi dapat disimpan atau diunduh dalam bentuk laporan untuk keperluan evaluasi atau dokumentasi penelitian.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ☎️ Kontak -->
+<section class="px-[30px] py-20 bg-gray-50" id="kontak">
+  <div class="container mx-auto px-4 text-center max-w-2xl">
+    <i class="fa-solid fa-envelope text-4xl text-indigo-600 mb-4"></i>
+    <h2 class="text-3xl font-bold text-gray-900 mb-3">Kontak Kami</h2>
+    <p class="text-lg text-gray-600 mb-6">
+      Hubungi kami untuk kolaborasi riset, dukungan teknis, atau pertanyaan akademik terkait deteksi mikro ekspresi berbasis AI.
+    </p>
+    <a href="mailto:support@cekmikro.ai" class="inline-flex items-center px-6 py-3 border border-indigo-600 text-indigo-600 rounded-full font-medium transition-all hover:bg-indigo-600 hover:text-white">
+      <i class="fa-solid fa-paper-plane mr-2"></i>Email Kami
+    </a>
+  </div>
+</section>
+
+<!-- 🔚 Footer -->
+<footer class="bg-gray-800 text-gray-400 py-8">
+  <div class="container mx-auto px-4 text-center">
+    <p>&copy; 2025 <span class="font-semibold text-white">CekMikro</span>. All rights reserved.</p>
+  </div>
+</footer>
+
+
+<!-- JavaScript for Navbar Effects -->
+<script>
+  window.addEventListener('scroll', function() {
+    const navbar = document.getElementById('navbar');
+    if (window.scrollY > 50) {
+      navbar.classList.add('navbar-scrolled');
+    } else {
+      navbar.classList.remove('navbar-scrolled');
+    }
+  });
+
+  // Mobile menu toggle
+  const menuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  menuButton.addEventListener('click', function() {
+    mobileMenu.classList.toggle('hidden');
+  });
+  
+  // Close mobile menu when a link is clicked
+  mobileMenu.addEventListener('click', function(e) {
+    if (e.target.tagName === 'A') {
+      mobileMenu.classList.add('hidden');
+    }
+  });
+</script>
+
+</body>
+</html>
